@@ -1,54 +1,90 @@
-body[data-theme='light'] {
-    --background-color: #f4f4f9;
-    --text-color: #333;
-    --card-background: white;
-    --accent-color: #4caf50;
-}
-
-body[data-theme='dark'] {
-    --background-color: #1e1e2f;
-    --text-color: #f4f4f9;
-    --card-background: #2c2c3a;
-    --accent-color: #4caf50;
-}
-
+/* Основные стили */
 body {
     margin: 0;
     padding: 0;
     background-color: var(--background-color);
     color: var(--text-color);
-    font-family: sans-serif;
+    font-family: 'Roboto', sans-serif;
     transition: background-color 0.3s, color 0.3s;
 }
 
-.container {
-    max-width: 800px;
-    margin: auto;
-    padding: 20px;
-}
-
-.transaction-list {
-    list-style: none;
-    padding: 0;
-    transition: all 0.3s ease;
-}
-
-.transaction-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    padding: 10px;
-    border-radius: 5px;
-    background-color: var(--card-background);
-    transition: all 0.3s ease;
-}
-
-    .transaction-item.removing {
-        opacity: 0;
-        transform: translateX(20px);
+    /* Темная и светлая тема */
+    body[data-theme='light'] {
+        --background-color: #f4f4f9;
+        --text-color: #333;
+        --card-background: white;
+        --accent-color: #4caf50;
+        --button-background: #4CAF50;
+        --button-text-color: white;
     }
 
+    body[data-theme='dark'] {
+        --background-color: #1e1e2f;
+        --text-color: #f4f4f9;
+        --card-background: #2c2c3a;
+        --accent-color: #4caf50;
+        --button-background: #3e8e41;
+        --button-text-color: white;
+    }
+
+/* Контейнер с контентом */
+.container {
+    max-width: 100%;
+    margin: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Навигация */
+.navbar {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.nav-link {
+    text-decoration: none;
+    padding: 10px 20px;
+    margin: 0;
+    background-color: var(--accent-color);
+    color: var(--button-text-color);
+    border-radius: 5px;
+    font-size: 1.2rem;
+    transition: background-color 0.3s ease;
+}
+
+    .nav-link:hover {
+        background-color: #45a049;
+    }
+
+.active-link {
+    background-color: #3e8e41;
+}
+
+/* Кнопки в контейнерах (например, фильтры, экспорт) */
+button {
+    padding: 12px 20px;
+    background-color: var(--button-background);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s;
+}
+
+    button:hover {
+        background-color: #45a049;
+        transform: scale(1.05);
+    }
+
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+/* Стили для Toast уведомлений */
 .toast {
     position: fixed;
     bottom: 30px;
@@ -64,21 +100,6 @@ body {
     z-index: 1000;
 }
 
-    .toast button {
-        background-color: transparent;
-        border: 1px solid #fff;
-        color: #fff;
-        padding: 4px 8px;
-        border-radius: 4px;
-        margin-left: 10px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-        .toast button:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
 @keyframes fadeInUp {
     to {
         opacity: 1;
@@ -86,6 +107,7 @@ body {
     }
 }
 
+/* Стили для переключателя темы */
 .theme-switch-wrapper {
     position: fixed;
     top: 20px;
@@ -133,4 +155,127 @@ input:checked + .slider {
 
     input:checked + .slider:before {
         transform: translateX(26px);
+    }
+
+/* Респонсивность для экранов */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .nav-link {
+        font-size: 1rem;
+        padding: 8px 16px;
+    }
+
+    .theme-switch-wrapper {
+        top: 15px;
+        right: 15px;
+    }
+
+    button {
+        width: 100%;
+        font-size: 1rem;
+    }
+}
+
+/* Контейнер для графиков */
+.charts-container {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+    gap: 200px;
+    margin: 20px 0;
+}
+
+    .charts-container .pie-chart,
+    .charts-container .line-chart {
+        padding: 25px;
+        background-color: var(--card-background);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+@media (max-width: 768px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Центрирование элементов ниже графиков */
+.centered-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+}
+
+/* Стили для формы ввода */
+.transaction-form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+    .transaction-form input,
+    .transaction-form button {
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        transition: border-color 0.3s, transform 0.3s;
+    }
+
+        .transaction-form input:focus,
+        .transaction-form button:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            transform: scale(1.05);
+        }
+
+    .transaction-form button {
+        background-color: var(--button-background);
+        color: var(--button-text-color);
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s, transform 0.3s;
+    }
+
+        .transaction-form button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+/* Стили для списка транзакций */
+.transaction-list {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--card-background);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+    .transaction-item:hover {
+        background-color: var(--accent-color);
+        transform: scale(1.02);
     }

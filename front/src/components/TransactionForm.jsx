@@ -26,7 +26,6 @@ const TransactionForm = ({ onAddTransaction }) => {
             });
 
             onAddTransaction(response.data);
-
             toast.success('Транзакция успешно добавлена!');
 
             // Очистим форму после отправки
@@ -41,7 +40,7 @@ const TransactionForm = ({ onAddTransaction }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
+        <form className="transaction-form" onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
             <input
                 type="text"
                 placeholder="Наименование"

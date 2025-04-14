@@ -2,22 +2,30 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import TransactionForm from '../components/TransactionForm';
 import TransactionList from '../components/TransactionList';
-import * as XLSX from 'xlsx';
 import { Pie } from 'react-chartjs-2';
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, LineElement, PointElement, CategoryScale, LinearScale } from 'chart.js';
+import * as XLSX from 'xlsx';
+import {
+    Chart as ChartJS,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement,
+    LineElement,
+    PointElement,
+    CategoryScale,
+    LinearScale
+} from 'chart.js';
 
-// Регистрируем необходимые элементы для Chart.js
 ChartJS.register(Title, Tooltip, Legend, ArcElement, LineElement, PointElement, CategoryScale, LinearScale);
 
 const Dashboard = () => {
     const [transactions, setTransactions] = useState([]);
-    const [filter, setFilter] = useState('all');
+    const [filter, setFilter] = useState('income');
     const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
     const [showToast, setShowToast] = useState(false);
     const [lastDeleted, setLastDeleted] = useState(null);
 
-    // Устанавливаем тему и сохраняем в localStorage
     useEffect(() => {
         document.body.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
@@ -30,14 +38,12 @@ const Dashboard = () => {
             .catch(error => console.error('Ошибка при загрузке транзакций:', error));
     }, []);
 
-    // Добавление новой транзакции
     const handleAddTransaction = (newTransaction) => {
         setTransactions(prev => [...prev, newTransaction]);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
     };
 
-    // Удаление транзакции с Undo
     const handleDeleteTransaction = (id) => {
         const transactionToDelete = transactions.find(t => t.id === id);
         if (transactionToDelete) {
@@ -59,7 +65,6 @@ const Dashboard = () => {
         }
     };
 
-    // Экспорт в Excel
     const handleExportExcel = () => {
         const worksheet = XLSX.utils.json_to_sheet(transactions.map(t => ({
             Дата: new Date(t.date).toLocaleDateString(),
@@ -73,7 +78,7 @@ const Dashboard = () => {
         XLSX.writeFile(workbook, 'Отчет.xlsx');
     };
 
-    // Фильтрация транзакций
+    // Фильтрация и сортировка транзакций
     const filteredTransactions = transactions
         .filter(t => {
             if (filter === 'all') return true;
@@ -81,37 +86,52 @@ const Dashboard = () => {
             if (filter === 'expense') return !t.isIncome;
             return true;
         })
-        .sort((a, b) => new Date(b.date) - new Date(a.date));
+        .sort((a, b) => new Date(b.date) - new Date(a.date)); // Сортировка только для списка
 
-    // Подсчёт общего баланса
+    // Данные для линейного графика (сортировка по возрастанию дат)
+    const transactionsForChart = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date)); // Сортировка для графика
+
+    // Общий баланс
     const totalBalance = transactions.reduce((acc, t) => t.isIncome ? acc + t.amount : acc - t.amount, 0);
 
-    // Подготовка данных для кругового графика
-    const income = transactions.filter(t => t.isIncome).reduce((acc, t) => acc + t.amount, 0);
-    const expense = transactions.filter(t => !t.isIncome).reduce((acc, t) => acc + t.amount, 0);
+    // Данные для кругового графика (по категориям)
+    const categoriesData = filteredTransactions.reduce((acc, transaction) => {
+        const category = transaction.category;
+        if (!acc[category]) {
+            acc[category] = { income: 0, expense: 0 };
+        }
+        if (transaction.isIncome) {
+            acc[category].income += transaction.amount;
+        } else {
+            acc[category].expense += transaction.amount;
+        }
+        return acc;
+    }, {});
+
+    // Разнообразие цветов для доходов и расходов
+    const randomColor = () => `#${Math.floor(Math.random() * 16777215).toString(16)}`;
 
     const chartData = {
-        labels: ['Доходы', 'Расходы'],
+        labels: Object.keys(categoriesData),
         datasets: [
             {
-                data: [income, expense],
-                backgroundColor: ['#4CAF50', '#F44336'],
+                label: 'Доходы и Расходы по категориям',
+                data: Object.values(categoriesData).map(item => item.income + item.expense),
+                backgroundColor: Object.keys(categoriesData).map(() => randomColor()), // Генерируем случайные цвета
                 hoverOffset: 4,
             },
         ],
     };
 
-    // Подготовка данных для линейного графика (по датам)
-    const transactionsByDate = filteredTransactions.reduce((acc, transaction) => {
+    // Данные для линейного графика (по датам)
+    const transactionsByDate = transactionsForChart.reduce((acc, transaction) => {
         const date = new Date(transaction.date).toLocaleDateString();
         if (!acc[date]) {
             acc[date] = { income: 0, expense: 0 };
         }
-        if (transaction.isIncome) {
-            acc[date].income += transaction.amount;
-        } else {
-            acc[date].expense += transaction.amount;
-        }
+        transaction.isIncome
+            ? acc[date].income += transaction.amount
+            : acc[date].expense += transaction.amount;
         return acc;
     }, {});
 
@@ -137,20 +157,20 @@ const Dashboard = () => {
 
     return (
         <div className="container">
-            {/* Переключатель темы */}
-            <div className="theme-switch-wrapper">
-                <label className="theme-switch">
-                    <input
-                        type="checkbox"
-                        onChange={() => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))}
-                        checked={theme === 'dark'}
-                    />
-                    <span className="slider"></span>
-                </label>
-            </div>
-
-            <h1>Dashboard</h1>
-            <h2>Баланс: {totalBalance.toLocaleString()} ₽</h2>
+            <header>
+                <div className="theme-switch-wrapper">
+                    <label className="theme-switch">
+                        <input
+                            type="checkbox"
+                            onChange={() => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))}
+                            checked={theme === 'dark'}
+                        />
+                        <span className="slider"></span>
+                    </label>
+                </div>
+                <h1>Система учета бюджета</h1>
+                <h2>Баланс: {totalBalance.toLocaleString()} ₽</h2>
+            </header>
 
             {showToast && <div className="toast">Транзакция добавлена ✅</div>}
             {lastDeleted && (
@@ -162,42 +182,37 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {/* Круговой график */}
-            <div className="pie-chart">
-                <h3>Доходы и Расходы</h3>
-                <Pie data={chartData} />
-            </div>
+            <section className="charts-section">
+                <div className="charts-container">
+                    <div className="pie-chart">
+                        <h3>Доходы и Расходы по категориям</h3>
+                        <Pie data={chartData} />
+                    </div>
+                    <div className="line-chart">
+                        <h3>Динамика по датам</h3>
+                        <Line data={lineChartData} />
+                    </div>
+                </div>
+            </section>
 
-            {/* Линейный график (по датам) */}
-            <div className="line-chart">
-                <h3>Динамика по датам</h3>
-                <Line data={lineChartData} />
-            </div>
-
-            {/* Фильтры и экспорт */}
-            <div className="filter-buttons">
-                <button onClick={() => setFilter('all')}>
-                    Все ({transactions.length})
-                </button>
-                <button onClick={() => setFilter('income')}>
-                    Доходы ({transactions.filter(t => t.isIncome).length})
-                </button>
-                <button onClick={() => setFilter('expense')}>
-                    Расходы ({transactions.filter(t => !t.isIncome).length})
-                </button>
-                <button onClick={handleExportExcel} style={{ marginLeft: '10px' }}>
-                    Экспорт в Excel
-                </button>
-            </div>
-
-            {/* Список транзакций */}
-            <TransactionList
-                transactions={filteredTransactions}
-                onDeleteTransaction={handleDeleteTransaction}
-            />
-
-            {/* Форма добавления транзакции */}
-            <TransactionForm onAddTransaction={handleAddTransaction} />
+            <section className="main-content centered-content">
+                <div className="filter-buttons">
+                    <button onClick={() => setFilter('income')}>
+                        Доходы ({transactions.filter(t => t.isIncome).length})
+                    </button>
+                    <button onClick={() => setFilter('expense')}>
+                        Расходы ({transactions.filter(t => !t.isIncome).length})
+                    </button>
+                    <button onClick={handleExportExcel} style={{ marginLeft: '10px' }}>
+                        Экспорт в Excel
+                    </button>
+                </div>
+                <TransactionForm onAddTransaction={handleAddTransaction} />
+                <TransactionList
+                    transactions={filteredTransactions}
+                    onDeleteTransaction={handleDeleteTransaction}
+                />
+            </section>
         </div>
     );
 };
