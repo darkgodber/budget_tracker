@@ -21,10 +21,17 @@ builder.Services.AddSwaggerGen();
 // ...
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BudgetTrackerContext>();
+    //db.Database.Migrate();
+}
+
+
 // Использование CORS (до использования эндпоинтов)
 app.UseCors("AllowReactApp");
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
