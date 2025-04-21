@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://localhost:5192/api', // замените URL на ваш адрес API
+    baseURL: '/api', // замените URL на ваш адрес API
     // Если ваш ASP.NET запускается на HTTPS, убедитесь, что сертификаты установлены корректно
 });
 

@@ -1,0 +1,42 @@
+
+
+    services:
+      backend:
+        build:
+          context: .
+          dockerfile: Dockerfile
+        ports:
+          - "5192:80"                # Проброс порта: хост 5000 -> контейнер 80
+        volumes:
+          - ./budgettracker.db:/app/budgettracker.db   # Том с файлом БД
+        environment:
+          - ASPNETCORE_URLS=http://+:80   # ASP.NET слушает на порту 80 в контейнере
+        networks:
+          - budget_tracker_network
+
+      frontend:
+        build:
+          context: ../../front
+          dockerfile: Dockerfile
+        ports:
+          - "3000:80"               # Проброс порта: хост 3000 -> контейнер 80 (Nginx)
+        depends_on:
+          - backend                 # Сначала поднимается backend
+        networks:
+          - budget_tracker_network
+          
+      nginx:
+        image: nginx:latest
+        volumes:
+          - ../../nginx/conf.d:/etc/nginx/conf.d
+        ports:
+          - "8080:80"
+        depends_on:
+          - backend
+          - frontend
+        networks:
+          - budget_tracker_network
+
+    networks:
+      budget_tracker_network:
+        driver: bridge
