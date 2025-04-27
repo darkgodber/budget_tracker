@@ -44,6 +44,17 @@ const Dashboard = () => {
         setTimeout(() => setShowToast(false), 2000);
     };
 
+    const [userEmail, setUserEmail] = useState('');
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                setUserEmail(payload.email);
+            } catch { };
+        }
+    }, []);
+
     const handleDeleteTransaction = (id) => {
         const transactionToDelete = transactions.find(t => t.id === id);
         if (transactionToDelete) {
@@ -169,6 +180,7 @@ const Dashboard = () => {
                     </label>
                 </div>
                 <h1>Система учета бюджета</h1>
+                {userEmail && <p className="user-email">Пользователь: {userEmail}</p>}
                 <h2>Баланс: {totalBalance.toLocaleString()} ₽</h2>
             </header>
 

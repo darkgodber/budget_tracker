@@ -1,27 +1,26 @@
-# Базовый образ с Node.js
-FROM node:16 AS build
+# 1) Stage: build
+FROM node:18-alpine AS build
 
-# Рабочая директория в контейнере
 WORKDIR /app
 
-# Копируем package.json и package-lock.json
-COPY package*.json ./
+# Копируем только package*.json, чтобы кешировать npm install
+COPY package.json package-lock.json ./
 
-# Устанавливаем зависимости с флагом --legacy-peer-deps
-RUN npm install --legacy-peer-deps
+# Устанавливаем все зависимости (и prod, и dev)
+RUN npm ci
 
-# Копируем весь проект
+# Копируем весь код и собираем
 COPY . .
-
-# Собираем приложение
 RUN npm run build
 
-# Используем Nginx для сервинга
+# 2) Stage: production
 FROM nginx:alpine
+
+# Копируем собранную папку в nginx
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Копируем кастомный конфиг, если нужно (опционально)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Опционально: свои настройки nginx
+# COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
